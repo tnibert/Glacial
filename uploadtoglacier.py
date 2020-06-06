@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 from sys import argv
 import boto3
+import pprint
 from datetime import date
 
 client = boto3.client('glacier')
@@ -14,10 +15,13 @@ with open(to_upload, 'rb') as f:
                                      archiveDescription="{}-{}".format(to_upload, date.today()),
                                      body=f)
 
-print(response)
+pprint.pprint(response)
 print("Done")
 
 def refresh_inventory():
+    """
+    Untested
+    """
     job_req = client.initiate_job(vaultName='myvault',
                                   jobParameters={'Type': 'inventory-retrieval'})
 
