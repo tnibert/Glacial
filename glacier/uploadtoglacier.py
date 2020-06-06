@@ -18,6 +18,7 @@ with open(to_upload, 'rb') as f:
 pprint.pprint(response)
 print("Done")
 
+# you can get all archive IDs by running a vault inventory job
 def refresh_inventory():
     """
     Untested
