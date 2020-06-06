@@ -1,11 +1,12 @@
-import sys.argv
+#! /usr/bin/env python3
+from sys import argv
 import boto3
 from datetime import date
 
 client = boto3.client('glacier')
 vaultname = "familyphotos"
-to_upload = sys.argv[1]
-print(to_upload)
+to_upload = argv[1]
+print("Uploading {}...".format(to_upload))
 
 # upload file
 with open(to_upload, 'rb') as f:
@@ -14,14 +15,15 @@ with open(to_upload, 'rb') as f:
                                      body=f)
 
 print(response)
+print("Done")
 
 def refresh_inventory():
-    job req = client.initiate_job(vaultName='myvault',
+    job_req = client.initiate_job(vaultName='myvault',
                                   jobParameters={'Type': 'inventory-retrieval'})
 
     while True:
         status = client.describe_job(vaultName='myvault',
-                                     jobId=job_req['jobId']
+                                     jobId=job_req['jobId'])
         if status['Completed']:
             break
         time.sleep(300)
