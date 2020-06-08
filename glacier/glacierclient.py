@@ -5,6 +5,7 @@ import pprint
 from datetime import date
 import argparse
 import time
+import json
 
 
 # you can get all archive IDs by running a vault inventory job                                                                                                                               
@@ -32,13 +33,12 @@ def refresh_inventory(vault, jobid=None):
     job_resp = client.get_job_output(vaultName=vault,
                                      jobId=jobid)
 
-    # first download the output and then parse the JSON                                                                                                                                       
+    # first download the output and then parse the JSON         
     output = job_resp['body'].read()
     pprint.pprint(output)
 
     archive_list = json.loads(output)['ArchiveList']
-    # persist archive_list                                                                                                                                                                    
-
+    # persist archive_list
     return archive_list
 
 
@@ -48,6 +48,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-u")
 parser.add_argument("-i", action='store_true')
 parser.add_argument("-j", default=None)
+parser.add_argument("-l", action='store_true')
 
 args = parser.parse_args()
 
@@ -65,6 +66,10 @@ if to_upload:
     pprint.pprint(response)
 
 if args.i is True:
-    print(refresh_inventory(vaultname, args.j))
+    pprint.pprint(refresh_inventory(vaultname, args.j))
+
+if args.l is True:
+    response = client.list_jobs(vaultName=vaultname)
+    pprint.pprint(response)
 
 print("Done")
