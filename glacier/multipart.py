@@ -5,7 +5,7 @@ import pprint
 # based on http://blog.ragsagar.in/2015/10/03/large-file-upload-using-amazon-glacier-boto3.html
 
 # I am uploading as chunks of 32mb
-CHUNK_SIZE = 1048576 * 32 
+CHUNK_SIZE = 1048576 * 32
 #AWS_ACCESS_KEY_ID = "Your access key id"
 #AWS_SECRET_ACCESS_KEY = "Your secret access key"
 
@@ -26,13 +26,17 @@ def upload_large_file(vault_name, filepath, description):
             multipart_upload.upload_part(range=range_data, body=chunk)
             start_range = f.tell()
 
+        print("Finalizing...")
+        s256t_hash = calculate_tree_hash(f)
         f.seek(0)
         response = multipart_upload.complete(archiveSize=str(start_range),
-                                             checksum=calculate_tree_hash(f))
-    pprint.pprint(response)
+                                             checksum=s256t_hash)
+        print("Hash: {}".format(s256t_hash))
 
-    archive_id = response.get('archiveId')
-    return archive_id
+    pprint.pprint(response)
+    return response
+    #archive_id = response.get('archiveId')
+    #return archive_id
 
 
 def read_in_chunks(file_obj, chunk_size):

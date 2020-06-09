@@ -1,11 +1,14 @@
 #! /usr/bin/env python3
-from sys import argv
+from multipart import upload_large_file
 import boto3
 import pprint
 from datetime import date
 import argparse
 import time
 import json
+
+
+LOG = "glacier.log"
 
 
 # you can get all archive IDs by running a vault inventory job                                                                                                                               
@@ -46,6 +49,7 @@ def refresh_inventory(vault, jobid=None):
 parser = argparse.ArgumentParser()
 
 parser.add_argument("-u")
+parser.add_argument("-m")
 parser.add_argument("-i", action='store_true')
 parser.add_argument("-j", default=None)
 parser.add_argument("-l", action='store_true')
@@ -55,6 +59,8 @@ args = parser.parse_args()
 client = boto3.client('glacier')
 vaultname = "familyphotos"
 to_upload = args.u
+to_multi_upload = args.m
+
 if to_upload:
     print("Uploading {}...".format(to_upload))
 
@@ -64,6 +70,14 @@ if to_upload:
                                          archiveDescription="{}-{}".format(to_upload, date.today()),
                                          body=f)
     pprint.pprint(response)
+    with open(LOG, "a") as f:
+        f.write(str(response))
+
+elif to_multi_upload:
+    print("Uploading {}...".format(to_multi_upload))
+    response = upload_large_file(vaultname, to_multi_upload, "{}-{}".format(to_multi_upload, date.today()))
+    with open(LOG, "a") as f:
+        f.write(str(response))
 
 if args.i is True:
     pprint.pprint(refresh_inventory(vaultname, args.j))
