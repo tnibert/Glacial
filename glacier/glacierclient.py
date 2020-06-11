@@ -72,12 +72,14 @@ if to_upload:
     pprint.pprint(response)
     with open(LOG, "a") as f:
         f.write(str(response))
+        f.write("\n")
 
 elif to_multi_upload:
     print("Uploading {}...".format(to_multi_upload))
     response = upload_large_file(vaultname, to_multi_upload, "{}-{}".format(to_multi_upload, date.today()))
     with open(LOG, "a") as f:
         f.write(str(response))
+        f.write("\n")
 
 if args.i is True:
     pprint.pprint(refresh_inventory(vaultname, args.j))
