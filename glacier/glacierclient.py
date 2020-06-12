@@ -38,9 +38,10 @@ def refresh_inventory(vault, jobid=None):
 
     # first download the output and then parse the JSON         
     output = job_resp['body'].read()
-    pprint.pprint(output)
+    parsedoutput = json.loads(output)
+    pprint.pprint(parsedoutput)
 
-    archive_list = json.loads(output)['ArchiveList']
+    archive_list = parsedoutput['ArchiveList']
     # persist archive_list
     return archive_list
 
