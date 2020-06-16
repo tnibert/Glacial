@@ -26,38 +26,21 @@ def upload_large_file(vault_name, filepath, description):
     upload_id = multipart_upload.id
     print("Upload id: {}".format(upload_id))
 
-    retrylist = []
-
     with open(filepath, 'rb') as f:
-        start_range = 0
-        for chunk in read_in_chunks(f, CHUNK_SIZE):
-            range_data = "bytes %s-%s/*" % (start_range, f.tell()-1)
-            print("Uploading range %s" % range_data)
-            try:
-                multipart_upload.upload_part(range=range_data, body=chunk)
-            except BotoCoreError as e:
-                print(e)
-                retrylist.append({'range': range_data, 'body': chunk})
-            start_range = f.tell()
+        retrylist = upload_segments(multipart_upload, read_in_chunks(f, CHUNK_SIZE))
 
-        # todo: remove redundancy
+        f.seek(0, 2)
+        fsize = f.tell()
+
         while len(retrylist) > 0:
-            newretrylist = []
             print("Retrying failed parts")
-            for chunk in retrylist:
-                print("--Uploading range %s" % chunk['range'])
-                try:
-                    multipart_upload.upload_part(**chunk)
-
-                except BotoCoreError as e:
-                    print(e)
-                    newretrylist.append({'range': range_data, 'body': chunk})
-            retrylist = newretrylist
+            # syntax turns list into a generator
+            retrylist = upload_segments(multipart_upload, (i for i in retrylist))
 
         print("Finalizing upload {} ...".format(upload_id))
         f.seek(0)
         s256t_hash = calculate_tree_hash(f)
-        response = multipart_upload.complete(archiveSize=str(start_range),
+        response = multipart_upload.complete(archiveSize=str(fsize),
                                              checksum=s256t_hash)
         print("Hash: {}".format(s256t_hash))
 
@@ -68,9 +51,33 @@ def upload_large_file(vault_name, filepath, description):
 
 
 def read_in_chunks(file_obj, chunk_size):
-    """ Reads the given file as chunks, instead of loading everything into memory."""
+    """
+    Reads the given file as chunks, instead of loading everything into memory.
+    Returns generator
+    """
     while True:
+        start_range = file_obj.tell()
         data = file_obj.read(chunk_size)
         if not data:
             break
-        yield data
+        range_data = "bytes %s-%s/*" % (start_range, file_obj.tell() - 1)
+        yield {'range': range_data, 'body': data}
+
+
+def upload_segments(mp_upload, chunks_generator):
+    """
+    Upload an individual chunk of file to multipart upload, with error handling
+    :param mp_upload: multipart upload object
+    :param chunks_generator: generator yielding file data in dicts of
+            {'range': range_data, 'body': data}
+    :return: list of chunks that need upload retried
+    """
+    newretrylist = []
+    for chunk in chunks_generator:
+        print("Uploading range %s" % chunk['range'])
+        try:
+            mp_upload.upload_part(**chunk)
+        except BotoCoreError as e:
+            print(e)
+            newretrylist.append(chunk)
+    return newretrylist
