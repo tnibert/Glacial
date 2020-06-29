@@ -49,16 +49,19 @@ def refresh_inventory(vault, jobid=None):
 # read arguments
 parser = argparse.ArgumentParser()
 
+# todo: add help text
 parser.add_argument("-u")
 parser.add_argument("-m")
 parser.add_argument("-i", action='store_true')
 parser.add_argument("-j", default=None)
 parser.add_argument("-l", action='store_true')
+parser.add_argument("-v", required=True)        # vault name
 
 args = parser.parse_args()
 
 client = boto3.client('glacier')
-vaultname = "familyphotos"
+vaultname = args.v
+# todo: base this decision on file size
 to_upload = args.u
 to_multi_upload = args.m
 

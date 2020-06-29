@@ -3,17 +3,16 @@ from botocore.exceptions import BotoCoreError
 import boto3
 import pprint
 
-# based on http://blog.ragsagar.in/2015/10/03/large-file-upload-using-amazon-glacier-boto3.html
-
 # uploading as chunks of 2mb
 CHUNK_SIZE = 1048576 * 2
 #AWS_ACCESS_KEY_ID = "Your access key id"
 #AWS_SECRET_ACCESS_KEY = "Your secret access key"
 
 
+# todo: investigate making async for more throughput
 def upload_large_file(vault_name, filepath, description):
     """
-
+    Do a multi part upload to glacier
     :param vault_name:
     :param filepath:
     :param description:
