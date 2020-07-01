@@ -1,0 +1,1 @@
+This is a command line client for using Amazon Glacier cold storage.
