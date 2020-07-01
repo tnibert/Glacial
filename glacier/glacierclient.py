@@ -1,8 +1,9 @@
 #! /usr/bin/env python3
-from multipart import upload_large_file
+from multipart import upload_large_file, CHUNK_SIZE
+from datetime import date
+from os.path import getsize
 import boto3
 import pprint
-from datetime import date
 import argparse
 import time
 import json
@@ -45,13 +46,11 @@ def refresh_inventory(vault, jobid=None):
     # persist archive_list
     return archive_list
 
-
 # read arguments
 parser = argparse.ArgumentParser()
 
 # todo: add help text
 parser.add_argument("-u")
-parser.add_argument("-m")
 parser.add_argument("-i", action='store_true')
 parser.add_argument("-j", default=None)
 parser.add_argument("-l", action='store_true')
@@ -61,11 +60,11 @@ args = parser.parse_args()
 
 client = boto3.client('glacier')
 vaultname = args.v
-# todo: base this decision on file size
-to_upload = args.u
-to_multi_upload = args.m
+to_upload = args.u      # the file name to upload
 
-if to_upload:
+# if the file size is less than the chunk size
+# upload in one part, otherwise upload multi part
+if getsize(to_upload) <= CHUNK_SIZE:
     print("Uploading {}...".format(to_upload))
 
     # upload file
@@ -78,9 +77,10 @@ if to_upload:
         f.write(str(response))
         f.write("\n")
 
-elif to_multi_upload:
-    print("Uploading {}...".format(to_multi_upload))
-    response = upload_large_file(vaultname, to_multi_upload, "{}-{}".format(to_multi_upload, date.today()))
+else:
+    print("Uploading 2 {}...".format(to_upload))
+
+    response = upload_large_file(vaultname, to_upload, "{}-{}".format(to_upload, date.today()))
     with open(LOG, "a") as f:
         f.write(str(response))
         f.write("\n")
