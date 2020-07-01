@@ -46,6 +46,17 @@ def refresh_inventory(vault, jobid=None):
     # persist archive_list
     return archive_list
 
+
+def write_log(data):
+    """
+    Record glacier object upload
+    :param data: information to write out
+    :return:
+    """
+    with open(LOG, "a") as fi:
+        fi.write(str(data))
+        fi.write("\n")
+
 # read arguments
 parser = argparse.ArgumentParser()
 
@@ -73,17 +84,13 @@ if getsize(to_upload) <= CHUNK_SIZE:
                                          archiveDescription="{}-{}".format(to_upload, date.today()),
                                          body=f)
     pprint.pprint(response)
-    with open(LOG, "a") as f:
-        f.write(str(response))
-        f.write("\n")
+    write_log(response)
 
 else:
-    print("Uploading 2 {}...".format(to_upload))
+    print("Uploading {}...".format(to_upload))
 
     response = upload_large_file(vaultname, to_upload, "{}-{}".format(to_upload, date.today()))
-    with open(LOG, "a") as f:
-        f.write(str(response))
-        f.write("\n")
+    write_log(response)
 
 if args.i is True:
     pprint.pprint(refresh_inventory(vaultname, args.j))
