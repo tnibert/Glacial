@@ -12,10 +12,11 @@ import json
 LOG = "glacier.log"
 
 
-# you can get all archive IDs by running a vault inventory job                                                                                                                               
 def refresh_inventory(vault, jobid=None):
     """                                                                                                                                                                                       
-    Untested                                                                                                                                                                                  
+    You can get all archive IDs by running a vault inventory job
+    :param vault: the vault to retrieve inventory for
+    :param jobid: optional job id to continue a previous inventory job
     """
     if not jobid:
         job_req = client.initiate_job(vaultName=vault,
