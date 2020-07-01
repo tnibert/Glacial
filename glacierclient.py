@@ -61,12 +61,11 @@ def write_log(data):
 # read arguments
 parser = argparse.ArgumentParser()
 
-# todo: add help text
-parser.add_argument("-u")
-parser.add_argument("-i", action='store_true')
-parser.add_argument("-j", default=None)
-parser.add_argument("-l", action='store_true')
-parser.add_argument("-v", required=True)        # vault name
+parser.add_argument("-u", help="Specifies file to upload")
+parser.add_argument("-i", action='store_true', help="View vault inventory (run inventory job), this may take a while")
+parser.add_argument("-j", default=None, help="Optional inventory job id to continue")
+parser.add_argument("-l", action='store_true', help="List all jobs")
+parser.add_argument("-v", required=True, help="Specifies the vault to access")        # vault name
 
 args = parser.parse_args()
 
@@ -76,22 +75,23 @@ to_upload = args.u      # the file name to upload
 
 # if the file size is less than the chunk size
 # upload in one part, otherwise upload multi part
-if getsize(to_upload) <= CHUNK_SIZE:
-    print("Uploading {}...".format(to_upload))
+if to_upload:
+    if getsize(to_upload) <= CHUNK_SIZE:
+        print("Uploading {}...".format(to_upload))
 
-    # upload file
-    with open(to_upload, 'rb') as f:
-        response = client.upload_archive(vaultName=vaultname,
-                                         archiveDescription="{}-{}".format(to_upload, date.today()),
-                                         body=f)
-    pprint.pprint(response)
-    write_log(response)
+        # upload file
+        with open(to_upload, 'rb') as f:
+            response = client.upload_archive(vaultName=vaultname,
+                                             archiveDescription="{}-{}".format(to_upload, date.today()),
+                                             body=f)
+        pprint.pprint(response)
+        write_log(response)
 
-else:
-    print("Uploading {}...".format(to_upload))
+    else:
+        print("Uploading {}...".format(to_upload))
 
-    response = upload_large_file(vaultname, to_upload, "{}-{}".format(to_upload, date.today()))
-    write_log(response)
+        response = upload_large_file(vaultname, to_upload, "{}-{}".format(to_upload, date.today()))
+        write_log(response)
 
 if args.i is True:
     pprint.pprint(refresh_inventory(vaultname, args.j))
